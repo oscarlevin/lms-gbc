@@ -1,0 +1,35 @@
+[
+  {
+    "targetColumn": "Prep and Practice Total (1504450)",
+    "pattern": "^(\\d+\\.\\d+ (Preview|Exercises))",
+    "type": "percentage",
+    "onlyRecorded": true,
+    "pointsPossible": 100,
+    "decimals": 2
+  },
+  {
+    "targetColumn": "Learning Targets Mastered (1504455)",
+    "pattern": "^(UD|CD|AD|ID|CC)\\s*\\d+",
+    "type": "count_threshold",
+    "threshold": 8,
+    "pointsPossible": 23,
+    "decimals": 0
+  },
+  {
+    "targetColumn": "Written Homework Total (1504451)",
+    "pattern": "^Homework\\s*\\d+",
+    "type": "average",
+    "onlyRecorded": true,
+    "dropLowest": 1,
+    "pointsPossible": 100,
+    "decimals": 2
+  },
+  {
+    "targetColumn": "Participation Total (1504453)",
+    "pattern": "Participation",
+    "type": "percentage",
+    "onlyRecorded": true,
+    "pointsPossible": 100,
+    "decimals": 2
+  }
+]

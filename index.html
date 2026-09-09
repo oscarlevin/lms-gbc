@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Canvas Gradebook Calculator & Rule Builder</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #eff6ff;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --accent: #10b981;
+      --accent-hover: #059669;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1250px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    p.subtitle {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-top: 4px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .dropzone {
+      border: 2px dashed var(--primary);
+      border-radius: 8px;
+      padding: 30px 20px;
+      text-align: center;
+      background: var(--primary-light);
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .dropzone:hover, .dropzone.dragover {
+      background: #dbeafe;
+      border-color: var(--primary-hover);
+    }
+
+    .dropzone input[type="file"] {
+      display: none;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .btn:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+
+    .btn-outline {
+      background: #ffffff;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+    }
+
+    .btn-outline:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+    }
+
+    .btn-icon {
+      background: none;
+      border: 1px solid #cbd5e1;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0;
+    }
+
+    .btn-icon:hover {
+      background: #e2e8f0;
+      color: var(--text);
+      border-color: #94a3b8;
+    }
+
+    .btn-success {
+      background: var(--accent);
+    }
+
+    .btn-success:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-sm {
+      padding: 5px 10px;
+      font-size: 0.8rem;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+    .btn-danger:hover {
+      background: var(--danger-hover);
+    }
+
+    /* Rule Card */
+    .rule-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--primary);
+      padding: 16px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+
+    .rule-main-row {
+      display: grid;
+      grid-template-columns: 2fr 2fr 1.4fr 0.8fr 0.8fr 0.8fr auto;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: var(--primary);
+      margin-top: 5px;
+    }
+
+    .field-group label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+    }
+
+    input[type="text"], input[type="number"], select {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 5px;
+      font-size: 0.875rem;
+      background: #ffffff;
+      color: var(--text);
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+    }
+
+    /* Match Assistant & Chips */
+    .match-assistant {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--border);
+    }
+
+    details.match-details {
+      font-size: 0.85rem;
+    }
+
+    details.match-details summary {
+      cursor: pointer;
+      font-weight: 500;
+      color: #334155;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      list-style: none;
+    }
+
+    details.match-details summary::-webkit-details-marker {
+      display: none;
+    }
+
+    details.match-details summary::before {
+      content: '▸';
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      transition: transform 0.15s ease;
+      display: inline-block;
+    }
+
+    details.match-details[open] summary::before {
+      transform: rotate(90deg);
+    }
+
+    .match-summary-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      margin-top: 8px;
+      margin-bottom: 6px;
+    }
+
+    .match-count-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.75rem;
+    }
+
+    .badge-success {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .badge-warning {
+      background: #fef9c3;
+      color: #854d0e;
+    }
+
+    .match-chips-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      max-height: 140px;
+      overflow-y: auto;
+      padding: 8px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+    }
+
+    .col-chip {
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: #e2e8f0;
+      color: #475569;
+      border: 1px solid transparent;
+      user-select: none;
+      transition: all 0.15s;
+    }
+
+    .col-chip.matched {
+      background: #dbeafe;
+      color: #1e40af;
+      border-color: #93c5fd;
+      font-weight: 600;
+    }
+
+    .col-chip.target-match {
+      background: #f1f5f9;
+      color: #94a3b8;
+      text-decoration: line-through;
+      border-color: #cbd5e1;
+    }
+
+    .regex-presets {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+
+    .preset-pill {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #334155;
+    }
+
+    .preset-pill:hover {
+      background: #e2e8f0;
+      border-color: #94a3b8;
+    }
+
+    .actions-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    .table-container {
+      max-height: 440px;
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-top: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+
+    th, td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid #f1f5f9;
+      text-align: left;
+    }
+
+    th {
+      background: #f1f5f9;
+      font-weight: 600;
+      top: 0;
+      z-index: 1;
+    }
+
+    tr:nth-child(even) td {
+      background: #fafafa;
+    }
+
+    td.highlight-col {
+      background: #eff6ff !important;
+      font-weight: 600;
+      color: #1e40af;
+    }
+
+    th.highlight-col {
+      background: #dbeafe !important;
+      color: #1e40af;
+    }
+
+    .log-box {
+      background: #0f172a;
+      color: #f8fafc;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.8rem;
+      padding: 12px;
+      border-radius: 6px;
+      max-height: 160px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    .tag {
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      background: #e2e8f0;
+      border-radius: 4px;
+      color: #475569;
+    }
+
+    .flex-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .json-editor {
+      width: 100%;
+      height: 160px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #f8fafc;
+    }
+
+    .regex-error {
+      color: var(--danger);
+      font-size: 0.75rem;
+      margin-top: 2px;
+    }
+
+    /* Modal dialog styling */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(2px);
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-dialog {
+      background: #ffffff;
+      border-radius: 8px;
+      max-width: 1200px;
+      width: 90%;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f8fafc;
+    }
+
+    .modal-header h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      font-size: 0.88rem;
+      color: #334155;
+    }
+
+    .pattern-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    .pattern-table th, .pattern-table td {
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      text-align: left;
+      font-size: 0.85rem;
+    }
+
+    .pattern-table th {
+      background: #f1f5f9;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    .pattern-code-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f1f5f9;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid #cbd5e1;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.8rem;
+      color: #0f172a;
+    }
+
+    .copy-btn {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      color: #334155;
+      margin-left: 8px;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .copy-btn:hover {
+      background: #e2e8f0;
+      border-color: #94a3b8;
+    }
+
+    .modal-footer {
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      background: #f8fafc;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>Canvas Gradebook Calculator</h1>
+    <p class="subtitle">Upload a Canvas grade export CSV, set up calculation rules with visual column matching, and download the modified CSV.</p>
+  </header>
+
+  <!-- Step 1: Upload CSV -->
+  <div class="card">
+    <div class="card-title">
+      <span>1. Upload Gradebook CSV</span>
+      <span id="file-status" class="tag">No file selected</span>
+    </div>
+    <div class="dropzone" id="dropzone" onclick="document.getElementById('csv-file').click()">
+      <p style="font-weight: 600; font-size: 1.05rem; margin-bottom: 6px;">Click or Drag & Drop Canvas CSV file here</p>
+      <p style="color: var(--text-muted); font-size: 0.85rem;">Standard Canvas exports with metadata columns and Points Possible row</p>
+      <input type="file" id="csv-file" accept=".csv" />
+    </div>
+  </div>
+
+  <!-- Step 2: Calculation Rules -->
+  <div class="card">
+    <div class="card-title">
+      <span>2. Calculation Rules & Column Mappings</span>
+      <div class="flex-row">
+        <input type="file" id="rules-json-file" accept=".json" style="display: none;" onchange="handleRulesFileSelect(event)" />
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('rules-json-file').click()" title="Load rules from a JSON file">📂 Load Rules JSON</button>
+        <button class="btn btn-outline btn-sm" onclick="exportRulesJson()" title="Save current rules as a JSON file">💾 Save Rules JSON</button>
+        <button class="btn btn-secondary btn-sm" id="saved-rules-btn" onclick="restoreSavedRules()" style="display: none;" title="Restore rules from local storage">↻ Restore Saved</button>
+        <button class="btn btn-secondary btn-sm" onclick="toggleJsonView()">Toggle JSON Editor</button>
+        <button class="btn btn-sm" onclick="addRuleRow()">+ Add Rule</button>
+      </div>
+    </div>
+
+    <!-- Visual Rule Builder -->
+    <div id="visual-rules-container">
+      <div id="rules-list"></div>
+    </div>
+
+    <!-- JSON Rules View (Hidden by default) -->
+    <div id="json-rules-container" style="display: none; margin-top: 10px;">
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px;">
+        Edit rules directly as JSON (useful for copying or sharing configurations):
+      </p>
+      <textarea id="json-rules-input" class="json-editor"></textarea>
+      <div class="flex-row" style="margin-top: 8px;">
+        <button class="btn btn-secondary btn-sm" onclick="applyJsonRules()">Apply JSON to Form</button>
+        <button class="btn btn-outline btn-sm" onclick="saveRulesToLocalStorage()">Save to Browser Storage</button>
+      </div>
+    </div>
+
+    <div class="actions-bar">
+      <div class="flex-row">
+        <button class="btn btn-success" id="process-btn" onclick="processAndCalculate()" disabled>
+          ⚙️ Process & Calculate Grades
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="saveRulesToLocalStorage()" title="Save current rules to browser local storage for future visits">
+          💾 Save Rules to Browser Storage
+        </button>
+      </div>
+      <button class="btn" id="download-btn" onclick="downloadModifiedCSV()" disabled>
+        ⬇️ Download Updated CSV
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 3: Preview and Logs -->
+  <div class="card" id="results-card" style="display: none;">
+    <div class="card-title">
+      <span>3. Preview & Output Summary</span>
+      <span id="rows-count" class="tag">0 students</span>
+    </div>
+    
+    <div class="log-box" id="log-box"></div>
+    <div class="table-container">
+      <table id="preview-table"></table>
+    </div>
+  </div>
+</div>
+
+<datalist id="all-columns-datalist"></datalist>
+
+<!-- Regex Help Modal Dialog -->
+<div class="modal-overlay" id="regex-help-modal" onclick="closeRegexModal(event)">
+  <div class="modal-dialog" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Common Column Match Regex Patterns</h2>
+      <button class="btn btn-secondary btn-sm" onclick="closeRegexModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin-bottom: 12px; color: var(--text-muted);">
+        Patterns match case-insensitively against column headers. Click <strong>Insert</strong> to place a pattern into the rule you were editing, or <strong>Copy</strong> to clipboard.
+      </p>
+      <table class="pattern-table">
+        <thead>
+          <tr>
+            <th style="width: 45%;">Pattern</th>
+            <th>What it Matches / Example</th>
+            <th style="width: 110px;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div class="pattern-code-box">
+                <code>^Homework\s*\d+</code>
+              </div>
+            </td>
+            <td>Columns starting with "Homework" followed by a number (e.g. <em>Homework 1</em>, <em>Homework 2</em>)</td>
+            <td>
+              <button class="copy-btn" onclick="insertPatternToCurrentRule('^Homework\\s*\\d+')">Insert</button>
+              <button class="copy-btn" onclick="copyPatternText('^Homework\\s*\\d+', this)">Copy</button>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="pattern-code-box">
+                <code>^Quiz\s*\d+</code>
+              </div>
+            </td>
+            <td>Quizzes starting with "Quiz" and a number (e.g. <em>Quiz 1</em>, <em>Quiz 2</em>)</td>
+            <td>
+              <button class="copy-btn" onclick="insertPatternToCurrentRule('^Quiz\\s*\\d+')">Insert</button>
+              <button class="copy-btn" onclick="copyPatternText('^Quiz\\s*\\d+', this)">Copy</button>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="pattern-code-box">
+                <code>^(Exam|Midterm|Test)</code>
+              </div>
+            </td>
+            <td>Any column starting with "Exam", "Midterm", or "Test"</td>
+            <td>
+              <button class="copy-btn" onclick="insertPatternToCurrentRule('^(Exam|Midterm|Test)')">Insert</button>
+              <button class="copy-btn" onclick="copyPatternText('^(Exam|Midterm|Test)', this)">Copy</button>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="pattern-code-box">
+                <code>^\d+\.\d+ Preview</code>
+              </div>
+            </td>
+            <td>Section-numbered previews (e.g. <em>1.1 Preview</em>, <em>2.3 Preview</em>)</td>
+            <td>
+              <button class="copy-btn" onclick="insertPatternToCurrentRule('^\\d+\\.\\d+ Preview')">Insert</button>
+              <button class="copy-btn" onclick="copyPatternText('^\\d+\\.\\d+ Preview', this)">Copy</button>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="pattern-code-box">
+                <code>^\d+\.\d+ Exercises</code>
+              </div>
+            </td>
+            <td>Section-numbered exercises (e.g. <em>1.1 Exercises</em>, <em>3.2 Exercises</em>)</td>
+            <td>
+              <button class="copy-btn" onclick="insertPatternToCurrentRule('^\\d+\\.\\d+ Exercises')">Insert</button>
+              <button class="copy-btn" onclick="copyPatternText('^\\d+\\.\\d+ Exercises', this)">Copy</button>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="pattern-code-box">
+                <code>^(\d+\.\d+ (Preview|Exercises))</code>
+              </div>
+            </td>
+            <td>Matches both section Previews and Exercises combined</td>
+            <td>
+              <button class="copy-btn" onclick="insertPatternToCurrentRule('^(\\d+\\.\\d+ (Preview|Exercises))')">Insert</button>
+              <button class="copy-btn" onclick="copyPatternText('^(\\d+\\.\\d+ (Preview|Exercises))', this)">Copy</button>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="pattern-code-box">
+                <code>^(UD|CD|AD|ID|CC)\s*\d+</code>
+              </div>
+            </td>
+            <td>Standards/targets starting with specific two-letter codes (e.g. <em>UD 1</em>, <em>CD 2</em>)</td>
+            <td>
+              <button class="copy-btn" onclick="insertPatternToCurrentRule('^(UD|CD|AD|ID|CC)\\s*\\d+')">Insert</button>
+              <button class="copy-btn" onclick="copyPatternText('^(UD|CD|AD|ID|CC)\\s*\\d+', this)">Copy</button>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="pattern-code-box">
+                <code>Participation</code>
+              </div>
+            </td>
+            <td>Contains the word "Participation" anywhere in the column name</td>
+            <td>
+              <button class="copy-btn" onclick="insertPatternToCurrentRule('Participation')">Insert</button>
+              <button class="copy-btn" onclick="copyPatternText('Participation', this)">Copy</button>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="pattern-code-box">
+                <code>^Project</code>
+              </div>
+            </td>
+            <td>Any assignment starting with "Project"</td>
+            <td>
+              <button class="copy-btn" onclick="insertPatternToCurrentRule('^Project')">Insert</button>
+              <button class="copy-btn" onclick="copyPatternText('^Project', this)">Copy</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" onclick="closeRegexModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="gradebook-processor.js"></script>
+<script>
+  const STORAGE_KEY = "canvas_gradebook_calculator_rules";
+
+  // General starter rule (empty rule template)
+  function createBlankRule() {
+    return {
+      targetColumn: "",
+      pattern: "",
+      type: "percentage",
+      onlyRecorded: true,
+      pointsPossible: 100,
+      decimals: 2
+    };
+  }
+
+  let rawCSVContent = "";
+  let parsedHeaders = [];
+  let processedResult = null;
+  let activeRules = loadInitialRules();
+
+  function loadInitialRules() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn("Could not load saved rules from localStorage", e);
+    }
+    return [createBlankRule()];
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    checkSavedRulesState();
+    renderRules();
+    setupDropzone();
+  });
+
+  function checkSavedRulesState() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    const restoreBtn = document.getElementById("saved-rules-btn");
+    if (restoreBtn) {
+      restoreBtn.style.display = saved ? "inline-flex" : "none";
+    }
+  }
+
+  function saveRulesToLocalStorage(silent = false) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(activeRules, null, 2));
+      checkSavedRulesState();
+      if (!silent) {
+        alert("Rules have been saved to your browser's local storage!");
+      }
+    } catch (e) {
+      alert("Failed to save rules to localStorage: " + e.message);
+    }
+  }
+
+  function restoreSavedRules() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        activeRules = JSON.parse(saved);
+        renderRules();
+        log("Restored calculation rules from browser local storage.");
+      }
+    } catch (e) {
+      alert("Error restoring rules: " + e.message);
+    }
+  }
+
+  function exportRulesJson() {
+    const jsonStr = JSON.stringify(activeRules, null, 2);
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "gradebook_calculation_rules.json";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  function handleRulesFileSelect(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const parsed = JSON.parse(e.target.result);
+        if (Array.isArray(parsed)) {
+          activeRules = parsed;
+          renderRules();
+          log(`Loaded ${parsed.length} rule(s) from "${file.name}".`);
+
+          // Prompt/offer to save to local storage
+          if (confirm(`Rules loaded from "${file.name}". Would you like to save these rules in your browser's local storage for future sessions?`)) {
+            saveRulesToLocalStorage(true);
+            log("Saved loaded rules into browser local storage.");
+          }
+        } else {
+          alert("Invalid JSON rules file: The root element must be a JSON array of rules.");
+        }
+      } catch (err) {
+        alert("Could not parse JSON rules file: " + err.message);
+      }
+      // reset file input
+      event.target.value = "";
+    };
+    reader.readAsText(file);
+  }
+
+  function setupDropzone() {
+    const dropzone = document.getElementById("dropzone");
+    const fileInput = document.getElementById("csv-file");
+
+    ["dragenter", "dragover"].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropzone.classList.add("dragover");
+      });
+    });
+
+    ["dragleave", "drop"].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropzone.classList.remove("dragover");
+      });
+    });
+
+    dropzone.addEventListener("drop", (e) => {
+      if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        handleFileSelect(fileInput.files[0]);
+      }
+    });
+
+    fileInput.addEventListener("change", (e) => {
+      if (e.target.files.length) {
+        handleFileSelect(e.target.files[0]);
+      }
+    });
+  }
+
+  function handleFileSelect(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      rawCSVContent = e.target.result;
+      const parsed = GradebookProcessor.parseCSV(rawCSVContent);
+      parsedHeaders = parsed.length > 0 ? parsed[0] : [];
+      
+      updateDatalist();
+      document.getElementById("file-status").textContent = `${file.name} (${(file.size/1024).toFixed(1)} KB, ${parsedHeaders.length} cols)`;
+      document.getElementById("process-btn").disabled = false;
+      
+      renderRules();
+      log(`Loaded "${file.name}" with ${parsedHeaders.length} columns.`);
+    };
+    reader.readAsText(file);
+  }
+
+  function updateDatalist() {
+    const datalist = document.getElementById("all-columns-datalist");
+    datalist.innerHTML = "";
+    parsedHeaders.forEach(header => {
+      const option = document.createElement("option");
+      option.value = header;
+      datalist.appendChild(option);
+    });
+  }
+
+  function getAssignmentColumns() {
+    return parsedHeaders.filter(h => 
+      !['LastName', 'FirstName', 'ID', 'SIS User ID', 'SIS Login ID', 'Section'].includes(h.trim())
+    );
+  }
+
+  function getMatchingInfo(rule) {
+    const assignmentCols = getAssignmentColumns();
+    if (!rule.pattern || !rule.pattern.trim()) {
+      return { matched: [], total: assignmentCols.length, error: null };
+    }
+
+    try {
+      const reg = new RegExp(rule.pattern, "i");
+      const matched = assignmentCols.filter(col => {
+        if (rule.targetColumn && col === rule.targetColumn) return false;
+        return reg.test(col);
+      });
+      return { matched, total: assignmentCols.length, error: null };
+    } catch (err) {
+      return { matched: [], total: assignmentCols.length, error: err.message };
+    }
+  }
+
+  function renderRules() {
+    const container = document.getElementById("rules-list");
+    container.innerHTML = "";
+
+    activeRules.forEach((rule, idx) => {
+      const matchInfo = getMatchingInfo(rule);
+      const assignmentCols = getAssignmentColumns();
+
+      const ruleCard = document.createElement("div");
+      ruleCard.className = "rule-card";
+      ruleCard.id = `rule-card-${idx}`;
+
+      // 1. Main configuration row
+      const mainRow = document.createElement("div");
+      mainRow.className = "rule-main-row";
+
+      let paramLabel = "Drop Lowest N";
+      let paramPlaceholder = "0";
+      if (rule.type === "count_threshold") {
+        paramLabel = "Threshold (>=)";
+        paramPlaceholder = "8";
+      }
+
+      mainRow.innerHTML = `
+        <div class="field-group">
+          <label>Target Column (Output)</label>
+          <div class="flex-row">
+            <input type="text" list="all-columns-datalist" placeholder="Select or type target column..." 
+                   value="${escapeHtml(rule.targetColumn || '')}" 
+                   oninput="updateRuleTargetColumn(${idx}, this.value)" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="flex-row" style="justify-content: space-between;">
+            <label>Source Columns (Regex/Prefix)</label>
+            <button type="button" class="btn-icon" onclick="openRegexHelpModal(${idx})" title="Common Regex Patterns &amp; Help">?</button>
+          </div>
+          <input type="text" placeholder="e.g. ^Homework or ^\\\\d+\\\\.\\\\d+" 
+                 value="${escapeHtml(rule.pattern || rule.prefix || '')}" 
+                 id="rule-pattern-input-${idx}"
+                 oninput="updateRulePattern(${idx}, this.value)" />
+        </div>
+
+        <div class="field-group">
+          <label>Calculation</label>
+          <select onchange="updateRuleType(${idx}, this.value)">
+            <option value="percentage" ${rule.type === 'percentage' ? 'selected' : ''}>Percentage (%) of Points</option>
+            <option value="average" ${rule.type === 'average' ? 'selected' : ''}>Average Score</option>
+            <option value="sum" ${rule.type === 'sum' ? 'selected' : ''}>Sum Total</option>
+            <option value="count_threshold" ${rule.type === 'count_threshold' ? 'selected' : ''}>Count Mastered (>= Threshold)</option>
+            <option value="drop_lowest_sum" ${rule.type === 'drop_lowest_sum' ? 'selected' : ''}>Sum (Drop Lowest N)</option>
+          </select>
+        </div>
+
+        <div class="field-group">
+          <label id="rule-param-label-${idx}">${paramLabel}</label>
+          <input type="number" placeholder="${paramPlaceholder}" 
+                 value="${rule.dropLowest ?? rule.threshold ?? ''}" 
+                 oninput="handleParamChange(${idx}, this.value)" />
+        </div>
+
+        <div class="field-group checkbox-group" title="When checked, calculation only considers assignments with entered/recorded scores (ignores empty cells for denominator/average)">
+          <label>Only Recorded</label>
+          <input type="checkbox" 
+                 ${(rule.onlyRecorded ?? rule['only-recorded'] ?? false) ? 'checked' : ''} 
+                 onchange="updateRuleCheckbox(${idx}, 'onlyRecorded', this.checked)" />
+        </div>
+
+        <div class="field-group">
+          <label>Max Points</label>
+          <input type="number" placeholder="100" value="${rule.pointsPossible ?? ''}" 
+                 oninput="updateRule(${idx}, 'pointsPossible', parseFloat(this.value))" />
+        </div>
+
+        <div class="field-group" style="align-self: flex-end;">
+          <button class="btn btn-danger btn-sm" onclick="deleteRule(${idx})" title="Delete rule">✕</button>
+        </div>
+      `;
+
+      ruleCard.appendChild(mainRow);
+
+      // 2. Match assistant inside collapsible details
+      const assistantDiv = document.createElement("div");
+      assistantDiv.className = "match-assistant";
+      assistantDiv.id = `match-assistant-${idx}`;
+      assistantDiv.innerHTML = buildMatchAssistantHTML(idx, rule);
+
+      ruleCard.appendChild(assistantDiv);
+      container.appendChild(ruleCard);
+    });
+
+    document.getElementById("json-rules-input").value = JSON.stringify(activeRules, null, 2);
+  }
+
+  function buildMatchAssistantHTML(idx, rule) {
+    const matchInfo = getMatchingInfo(rule);
+    const assignmentCols = getAssignmentColumns();
+
+    let statusBadge = "";
+    if (matchInfo.error) {
+      statusBadge = `<span class="match-count-badge badge-warning">Invalid Regex</span>`;
+    } else if (matchInfo.matched.length > 0) {
+      statusBadge = `<span class="match-count-badge badge-success">✓ Matches ${matchInfo.matched.length} columns</span>`;
+    } else {
+      statusBadge = `<span class="match-count-badge badge-warning">0 columns matched</span>`;
+    }
+
+    let chipsHtml = "";
+    if (assignmentCols.length > 0) {
+      chipsHtml = assignmentCols.map(col => {
+        const isMatched = matchInfo.matched.includes(col);
+        const isTarget = col === rule.targetColumn;
+        let chipClass = "col-chip";
+        if (isTarget) chipClass += " target-match";
+        else if (isMatched) chipClass += " matched";
+
+        return `<span class="${chipClass}" title="${escapeHtml(col)}">${escapeHtml(truncateCol(col))}</span>`;
+      }).join("");
+    } else {
+      chipsHtml = `<span style="font-size: 0.8rem; color: var(--text-muted); padding: 4px;">Upload a CSV to view all available columns and live regex matches.</span>`;
+    }
+
+    return `
+      <details class="match-details">
+        <summary>
+          <span>Matched Columns Preview</span>
+          ${statusBadge}
+          ${matchInfo.error ? `<span class="regex-error">${escapeHtml(matchInfo.error)}</span>` : ''}
+        </summary>
+        <div class="match-chips-container" style="margin-top: 8px;">
+          ${chipsHtml}
+        </div>
+      </details>
+    `;
+  }
+
+  function truncateCol(name) {
+    if (name.length > 28) {
+      return name.substring(0, 26) + "…";
+    }
+    return name;
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function updateRule(index, key, val) {
+    activeRules[index][key] = val;
+    document.getElementById("json-rules-input").value = JSON.stringify(activeRules, null, 2);
+  }
+
+  function updateRuleCheckbox(index, key, checked) {
+    activeRules[index][key] = checked;
+    delete activeRules[index]['only-recorded'];
+    document.getElementById("json-rules-input").value = JSON.stringify(activeRules, null, 2);
+  }
+
+  function updateRuleTargetColumn(index, val) {
+    activeRules[index].targetColumn = val;
+    refreshAssistantOnly(index);
+    document.getElementById("json-rules-input").value = JSON.stringify(activeRules, null, 2);
+  }
+
+  function updateRulePattern(index, val) {
+    activeRules[index].pattern = val;
+    delete activeRules[index].prefix;
+    refreshAssistantOnly(index);
+    document.getElementById("json-rules-input").value = JSON.stringify(activeRules, null, 2);
+  }
+
+  function refreshAssistantOnly(index) {
+    const assistantEl = document.getElementById(`match-assistant-${index}`);
+    if (assistantEl) {
+      // Preserve open/closed state of details
+      const detailsEl = assistantEl.querySelector('details');
+      const wasOpen = detailsEl ? detailsEl.open : false;
+      assistantEl.innerHTML = buildMatchAssistantHTML(index, activeRules[index]);
+      const newDetailsEl = assistantEl.querySelector('details');
+      if (newDetailsEl && wasOpen) {
+        newDetailsEl.open = true;
+      }
+    }
+  }
+
+  function updateRuleType(index, val) {
+    activeRules[index].type = val;
+    if (val === "count_threshold") {
+      if (activeRules[index].threshold === undefined) {
+        activeRules[index].threshold = 8;
+      }
+      document.getElementById(`rule-param-label-${index}`).textContent = "Threshold (>=)";
+    } else {
+      document.getElementById(`rule-param-label-${index}`).textContent = "Drop Lowest N";
+    }
+    document.getElementById("json-rules-input").value = JSON.stringify(activeRules, null, 2);
+  }
+
+  // Regex modal helper functions
+  let targetRuleIndexForRegexModal = 0;
+
+  function openRegexHelpModal(ruleIndex = 0) {
+    targetRuleIndexForRegexModal = ruleIndex;
+    const modal = document.getElementById("regex-help-modal");
+    if (modal) {
+      modal.classList.add("active");
+    }
+  }
+
+  function closeRegexModal(event) {
+    if (!event || event.target.id === "regex-help-modal" || event.target.tagName === "BUTTON") {
+      const modal = document.getElementById("regex-help-modal");
+      if (modal) {
+        modal.classList.remove("active");
+      }
+    }
+  }
+
+  function insertPatternToCurrentRule(pattern) {
+    if (activeRules[targetRuleIndexForRegexModal]) {
+      activeRules[targetRuleIndexForRegexModal].pattern = pattern;
+      delete activeRules[targetRuleIndexForRegexModal].prefix;
+      const inputEl = document.getElementById(`rule-pattern-input-${targetRuleIndexForRegexModal}`);
+      if (inputEl) {
+        inputEl.value = pattern;
+      }
+      refreshAssistantOnly(targetRuleIndexForRegexModal);
+      document.getElementById("json-rules-input").value = JSON.stringify(activeRules, null, 2);
+      closeRegexModal();
+    }
+  }
+
+  function copyPatternText(text, btnEl) {
+    navigator.clipboard.writeText(text).then(() => {
+      const originalText = btnEl.textContent;
+      btnEl.textContent = "Copied!";
+      setTimeout(() => {
+        btnEl.textContent = originalText;
+      }, 1500);
+    }).catch(err => {
+      console.warn("Clipboard copy failed:", err);
+    });
+  }
+
+  function handleParamChange(index, val) {
+    const num = parseFloat(val);
+    const rule = activeRules[index];
+    if (rule.type === "count_threshold") {
+      rule.threshold = isNaN(num) ? 8 : num;
+    } else {
+      rule.dropLowest = isNaN(num) ? 0 : num;
+    }
+    document.getElementById("json-rules-input").value = JSON.stringify(activeRules, null, 2);
+  }
+
+  function addRuleRow() {
+    activeRules.push(createBlankRule());
+    renderRules();
+  }
+
+  function deleteRule(index) {
+    activeRules.splice(index, 1);
+    if (activeRules.length === 0) {
+      activeRules.push(createBlankRule());
+    }
+    renderRules();
+  }
+
+  function toggleJsonView() {
+    const jsonDiv = document.getElementById("json-rules-container");
+    const visualDiv = document.getElementById("visual-rules-container");
+    const isHidden = jsonDiv.style.display === "none";
+    jsonDiv.style.display = isHidden ? "block" : "none";
+    visualDiv.style.display = isHidden ? "none" : "block";
+  }
+
+  function applyJsonRules() {
+    try {
+      const parsed = JSON.parse(document.getElementById("json-rules-input").value);
+      if (Array.isArray(parsed)) {
+        activeRules = parsed;
+        renderRules();
+        toggleJsonView();
+      } else {
+        alert("JSON must be an array of rule objects.");
+      }
+    } catch (e) {
+      alert("Invalid JSON: " + e.message);
+    }
+  }
+
+  function log(msg) {
+    const box = document.getElementById("log-box");
+    box.textContent += (box.textContent ? "\n" : "") + msg;
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function processAndCalculate() {
+    if (!rawCSVContent) {
+      alert("Please upload a CSV file first.");
+      return;
+    }
+
+    document.getElementById("results-card").style.display = "block";
+    document.getElementById("log-box").textContent = "";
+
+    try {
+      log("Starting grade calculations...");
+      processedResult = GradebookProcessor.process(rawCSVContent, activeRules);
+      
+      processedResult.logs.forEach(l => log(l));
+      log("Calculation complete! Table preview updated.");
+
+      document.getElementById("download-btn").disabled = false;
+      renderPreviewTable(processedResult.rows, activeRules.map(r => r.targetColumn));
+    } catch (err) {
+      log("Error during calculation: " + err.message);
+      console.error(err);
+    }
+  }
+
+  function renderPreviewTable(rows, highlightColumns) {
+    const table = document.getElementById("preview-table");
+    table.innerHTML = "";
+
+    if (!rows || rows.length === 0) return;
+
+    const headers = rows[0];
+    const highlightIndices = new Set(
+      highlightColumns.map(colName => headers.indexOf(colName)).filter(idx => idx !== -1)
+    );
+
+    // Header row
+    const thead = document.createElement("thead");
+    const trHead = document.createElement("tr");
+    headers.forEach((h, idx) => {
+      const th = document.createElement("th");
+      th.textContent = h;
+      if (highlightIndices.has(idx)) {
+        th.className = "highlight-col";
+      }
+      trHead.appendChild(th);
+    });
+    thead.appendChild(trHead);
+    table.appendChild(thead);
+
+    // Body rows (preview first 30 rows)
+    const tbody = document.createElement("tbody");
+    const previewRows = rows.slice(1, 35);
+    previewRows.forEach(row => {
+      const tr = document.createElement("tr");
+      row.forEach((cell, idx) => {
+        const td = document.createElement("td");
+        td.textContent = cell;
+        if (highlightIndices.has(idx)) {
+          td.className = "highlight-col";
+        }
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+
+    document.getElementById("rows-count").textContent = `${rows.length - 2} students processed (Showing preview)`;
+  }
+
+  function downloadModifiedCSV() {
+    if (!processedResult || !processedResult.csvText) return;
+
+    const blob = new Blob([processedResult.csvText], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Calculated_Grades_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+</script>
+
+</body>
+</html>
