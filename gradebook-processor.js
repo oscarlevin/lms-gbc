@@ -165,7 +165,13 @@ class GradebookProcessor {
       }
 
       const matchedCols = matchColumns(rule);
-      logs.push(`Rule "${rule.name || rule.targetColumn}": Matched ${matchedCols.length} columns.`);
+      if (rule.type === 'letter_grade') {
+        // Letter grade rules name their columns in conditions rather than matching a pattern.
+        const levelCount = (rule.grades || rule.scale || []).length;
+        logs.push(`Rule "${rule.name || rule.targetColumn}": Letter grade scale with ${levelCount} grade level(s).`);
+      } else {
+        logs.push(`Rule "${rule.name || rule.targetColumn}": Matched ${matchedCols.length} columns.`);
+      }
 
       const targetIndex = getOrCreateColumnIndex(
         rule.targetColumn, 
@@ -175,6 +181,9 @@ class GradebookProcessor {
       if (isCanvasPointsRow && rule.pointsPossible !== undefined) {
         rows[1][targetIndex] = String(rule.pointsPossible);
       }
+
+      // Context shared across all rows of this rule (collects warnings/tallies)
+      const ruleCtx = { missingColumns: new Set(), distribution: new Map() };
 
       for (let r = dataStartRow; r < rows.length; r++) {
         const studentRow = rows[r];
@@ -190,17 +199,41 @@ class GradebookProcessor {
           };
         });
 
-        const calculatedValue = GradebookProcessor.evaluateRule(rule, studentValues, studentRow, headers);
-        
-        if (calculatedValue !== null && calculatedValue !== undefined && !isNaN(calculatedValue)) {
+        const calculatedValue = GradebookProcessor.evaluateRule(rule, studentValues, studentRow, headers, ruleCtx);
+
+        // Text results (e.g. letter grades) are written through as-is; numbers are rounded.
+        const isTextResult = typeof calculatedValue === 'string';
+        const isUsable = calculatedValue !== null && calculatedValue !== undefined &&
+                         (isTextResult || !isNaN(calculatedValue));
+
+        if (isUsable) {
           const decimals = rule.decimals !== undefined ? rule.decimals : 2;
           const formatted = typeof calculatedValue === 'number' 
             ? (decimals >= 0 ? Number(calculatedValue.toFixed(decimals)).toString() : calculatedValue.toString())
             : String(calculatedValue);
           studentRow[targetIndex] = formatted;
+          if (isTextResult) {
+            ruleCtx.distribution.set(formatted, (ruleCtx.distribution.get(formatted) || 0) + 1);
+          }
         } else if (rule.emptyOnNull) {
           studentRow[targetIndex] = '';
         }
+      }
+
+      if (ruleCtx.missingColumns.size > 0) {
+        logs.push(
+          `Rule "${rule.name || rule.targetColumn}": WARNING - column(s) not found: ` +
+          `${Array.from(ruleCtx.missingColumns).join(', ')}. Conditions using them were treated as false. ` +
+          `Rules run in order, so a computed column must be produced by an earlier rule.`
+        );
+      }
+
+      if (ruleCtx.distribution.size > 0) {
+        const summary = Array.from(ruleCtx.distribution.entries())
+          .sort((a, b) => String(a[0]).localeCompare(String(b[0])))
+          .map(([grade, count]) => `${grade === '' ? '(blank)' : grade} = ${count}`)
+          .join(', ');
+        logs.push(`Distribution for "${rule.targetColumn}": ${summary}`);
       }
     }
 
@@ -213,9 +246,159 @@ class GradebookProcessor {
   }
 
   /**
-   * Evaluate a single calculation rule for a specific student row.
+   * Find the index of a column by name, tolerating the ID suffixes and casing
+   * differences common in LMS exports ("Homework Total" matches
+   * "Homework Total (1504451)"). Returns -1 when nothing matches.
    */
-  static evaluateRule(rule, columnData, fullRow, allHeaders) {
+  static resolveColumnIndex(allHeaders, name) {
+    if (!name || !Array.isArray(allHeaders)) return -1;
+    const target = String(name).trim();
+    if (!target) return -1;
+
+    let idx = allHeaders.indexOf(target);
+    if (idx !== -1) return idx;
+
+    const lower = target.toLowerCase();
+    idx = allHeaders.findIndex(h => String(h).trim().toLowerCase() === lower);
+    if (idx !== -1) return idx;
+
+    idx = allHeaders.findIndex(h => String(h).trim().toLowerCase().startsWith(lower));
+    if (idx !== -1) return idx;
+
+    return allHeaders.findIndex(h => String(h).toLowerCase().includes(lower));
+  }
+
+  /**
+   * Evaluate one leaf condition, e.g. { column: "Exam 1", op: ">=", value: 90 }.
+   *
+   * Operators: >= > <= < == != between (inclusive), plus the aliases
+   * gte/gt/lte/lt/eq/ne. "between" takes value: [min, max], or min/max keys.
+   * == and != fall back to case-insensitive text comparison when a non-numeric
+   * value is expected, so Section == "001" and Grade == "A" both work.
+   */
+  static evaluateComparison(node, fullRow, allHeaders, options = {}, ctx = null) {
+    const index = this.resolveColumnIndex(allHeaders, node.column);
+    if (index === -1) {
+      if (ctx && ctx.missingColumns) ctx.missingColumns.add(String(node.column));
+      return false;
+    }
+
+    const raw = fullRow[index];
+    const text = (raw === undefined || raw === null) ? '' : String(raw).trim();
+    const numeric = text === '' ? NaN : parseFloat(text);
+    const hasNumber = !isNaN(numeric);
+
+    const hasRange = node.min !== undefined || node.max !== undefined;
+    const rawOp = node.op ?? node.operator ?? (hasRange ? 'between' : '>=');
+    const op = String(rawOp).trim().toLowerCase();
+
+    const expected = node.value ?? node.threshold;
+    const isNegated = (op === '!=' || op === 'ne' || op === '!==');
+    const isEquality = isNegated || (op === '==' || op === '=' || op === 'eq' || op === '===');
+
+    // Text equality: used whenever the expected value is non-numeric text.
+    if (isEquality && typeof expected === 'string' && isNaN(parseFloat(expected))) {
+      const matches = text.toLowerCase() === expected.trim().toLowerCase();
+      return isNegated ? !matches : matches;
+    }
+
+    // Numeric comparison. A blank or non-numeric cell fails the condition unless
+    // the rule opts into treating missing scores as zero.
+    let value;
+    if (hasNumber) {
+      value = numeric;
+    } else if (options.treatMissingAsZero) {
+      value = 0;
+    } else {
+      return false;
+    }
+
+    if (op === 'between' || op === 'in_range' || op === 'range') {
+      let min = node.min;
+      let max = node.max;
+      if (Array.isArray(expected)) {
+        min = min ?? expected[0];
+        max = max ?? expected[1];
+      }
+      const lo = parseFloat(min);
+      const hi = parseFloat(max);
+      if (isNaN(lo) || isNaN(hi)) return false;
+      return value >= Math.min(lo, hi) && value <= Math.max(lo, hi);
+    }
+
+    const target = parseFloat(expected);
+    if (isNaN(target)) return false;
+
+    switch (op) {
+      case '>=': case 'gte': return value >= target;
+      case '>':  case 'gt':  return value > target;
+      case '<=': case 'lte': return value <= target;
+      case '<':  case 'lt':  return value < target;
+      case '==': case '=': case 'eq': case '===': return value === target;
+      case '!=': case 'ne': case '!==': return value !== target;
+      default: return false;
+    }
+  }
+
+  /**
+   * Evaluate a boolean condition tree against one student row.
+   *
+   * A node is one of:
+   *   { all: [...] } or { and: [...] }  every child must hold
+   *   { any: [...] } or { or:  [...] }  at least one child must hold
+   *   { not: node }                     negation
+   *   { column, op, value }             a leaf comparison
+   *   an array                          shorthand for { all: [...] }
+   *
+   * A missing or empty condition means "no restriction" and evaluates to true,
+   * which lets a trailing grade level act as a catch-all.
+   */
+  static evaluateCondition(node, fullRow, allHeaders, options = {}, ctx = null) {
+    if (node === null || node === undefined) return true;
+    if (typeof node === 'boolean') return node;
+
+    if (Array.isArray(node)) {
+      if (node.length === 0) return true;
+      return node.every(child => this.evaluateCondition(child, fullRow, allHeaders, options, ctx));
+    }
+
+    if (typeof node !== 'object') return false;
+
+    const allList = node.all ?? node.and;
+    if (Array.isArray(allList)) {
+      if (allList.length === 0) return true;
+      return allList.every(child => this.evaluateCondition(child, fullRow, allHeaders, options, ctx));
+    }
+
+    const anyList = node.any ?? node.or;
+    if (Array.isArray(anyList)) {
+      if (anyList.length === 0) return true;
+      return anyList.some(child => this.evaluateCondition(child, fullRow, allHeaders, options, ctx));
+    }
+
+    if (node.not !== undefined) {
+      return !this.evaluateCondition(node.not, fullRow, allHeaders, options, ctx);
+    }
+
+    // Anything carrying comparison keys is a leaf. An incomplete one (no column
+    // name) can never be satisfied, so it must not fall through to "true".
+    const leafKeys = ['column', 'op', 'operator', 'value', 'threshold', 'min', 'max'];
+    if (leafKeys.some(key => node[key] !== undefined)) {
+      if (!node.column || !String(node.column).trim()) return false;
+      return this.evaluateComparison(node, fullRow, allHeaders, options, ctx);
+    }
+
+    // Only a genuinely empty condition object places no restriction on the student.
+    return true;
+  }
+
+  /**
+   * Evaluate a single calculation rule for a specific student row.
+   *
+   * @param {Object} ctx - Optional per-rule context used to collect warnings
+   *                       (e.g. condition columns that could not be resolved).
+   */
+  static evaluateRule(rule, columnData, fullRow, allHeaders, ctx = null) {
     const type = rule.type || 'average';
     // Support "onlyRecorded" (camelCase) or "only-recorded" (hyphenated) or treatEmptyAsZero (boolean)
     const onlyRecorded = rule.onlyRecorded ?? rule['only-recorded'] ?? (rule.treatEmptyAsZero === false);
@@ -232,7 +415,9 @@ class GradebookProcessor {
       }));
     }
 
-    if (activeItems.length === 0 && type !== 'custom') {
+    // Letter grade rules read named columns straight off the row, so they do not
+    // need any regex-matched source columns.
+    if (activeItems.length === 0 && type !== 'custom' && type !== 'letter_grade') {
       return null;
     }
 
@@ -300,9 +485,27 @@ class GradebookProcessor {
         return total;
       }
 
+      case 'letter_grade': {
+        // Walk the grade scale top to bottom and return the first grade whose
+        // condition the student satisfies. Order matters: highest grade first.
+        const scale = rule.grades || rule.scale || [];
+        const options = { treatMissingAsZero: rule.treatMissingAsZero === true };
+
+        for (const level of scale) {
+          if (!level) continue;
+          const condition = level.when ?? level.condition ?? level.conditions ?? null;
+          if (GradebookProcessor.evaluateCondition(condition, fullRow, allHeaders, options, ctx)) {
+            return String(level.grade ?? level.label ?? '');
+          }
+        }
+
+        const fallback = rule.defaultGrade ?? rule.default;
+        return (fallback === undefined || fallback === null) ? null : String(fallback);
+      }
+
       case 'custom': {
         if (typeof rule.formula === 'function') {
-          return rule.formula(items, fullRow, allHeaders);
+          return rule.formula(columnData, fullRow, allHeaders);
         }
         return null;
       }

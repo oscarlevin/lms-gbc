@@ -176,15 +176,40 @@
       background: var(--danger-hover);
     }
 
+    /* The well the rule cards sit in, so they read as raised, separate objects */
+    #visual-rules-container {
+      background: #eef2f7;
+      border: 1px solid #dbe3ec;
+      border-radius: 8px;
+      padding: 12px;
+    }
+
     /* Rule Card */
     .rule-card {
       background: #ffffff;
-      border: 1px solid var(--border);
-      border-left: 4px solid var(--primary);
-      padding: 16px;
-      border-radius: 6px;
-      margin-bottom: 16px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+      border: 1px solid #e2e8f0;
+      border-left: 5px solid var(--primary);
+      padding: 16px 18px;
+      border-radius: 8px;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.10), 0 2px 4px -2px rgba(15, 23, 42, 0.06);
+      transition: box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+
+    .rule-card:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.12), 0 4px 6px -4px rgba(15, 23, 42, 0.08);
+    }
+
+    /* A letter grade rule carries a faint tint of its own accent colour, so the
+       two kinds of rule are told apart by more than the left edge alone. */
+    .rule-card.letter-rule {
+      background: #fbf9ff;
+      border-color: #e8e0f8;
+    }
+
+    .rule-card.letter-rule:hover {
+      border-color: #d3c4ee;
     }
 
     .rule-main-row {
@@ -241,11 +266,241 @@
       box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
     }
 
+    /* Letter Grade Scale Builder */
+    .rule-card.letter-rule {
+      border-left-color: #8b5cf6;
+    }
+
+    .letter-main-row {
+      display: grid;
+      grid-template-columns: 2fr 1.6fr 1fr 0.9fr auto;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .letter-scale {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid #e6e2f0;
+    }
+
+    .add-bottom-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      padding: 8px 16px;
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px dashed #cbd5e1;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .add-bottom-btn:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .scale-body > .add-bottom-btn {
+      background: transparent;
+    }
+
+    .add-bottom-btn .plus {
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    #rules-list + .add-bottom-btn {
+      border-color: #c3cedc;
+    }
+
+    #rules-list + .add-bottom-btn:hover {
+      background: #ffffff;
+    }
+
+    /* Collapsible scale, matching the disclosure style of the match assistant */
+    details.scale-details {
+      font-size: 0.85rem;
+    }
+
+    details.scale-details summary {
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      list-style: none;
+      padding: 2px 0;
+    }
+
+    details.scale-details summary::-webkit-details-marker {
+      display: none;
+    }
+
+    details.scale-details summary::before {
+      content: '\25B8';
+      color: var(--text-muted);
+      transition: transform 0.15s ease;
+      display: inline-block;
+    }
+
+    details.scale-details[open] summary::before {
+      transform: rotate(90deg);
+    }
+
+    .scale-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+    }
+
+    .scale-spacer {
+      flex-grow: 1;
+    }
+
+    .scale-body {
+      margin-top: 10px;
+    }
+
+    .scale-note {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .grade-level {
+      border: 1px solid #e6e2f0;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 12px;
+      background: #ffffff;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+    }
+
+    .grade-level-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .grade-order {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: #eef2ff;
+      border-radius: 10px;
+      padding: 2px 8px;
+      flex-shrink: 0;
+    }
+
+    .grade-label-input {
+      width: 90px !important;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .grade-hint {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      flex-grow: 1;
+    }
+
+    .grade-level-actions {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .cond-group {
+      border: 1px solid #e4e9f0;
+      border-left: 3px solid #c7d2fe;
+      border-radius: 5px;
+      padding: 8px 10px;
+      background: #f7f9fc;
+    }
+
+    .cond-group-title {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+      margin-bottom: 6px;
+    }
+
+    .cond-row {
+      display: grid;
+      grid-template-columns: 2.2fr 1.1fr 0.9fr auto;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .cond-row.is-between {
+      grid-template-columns: 2.2fr 1.1fr 0.9fr auto 0.9fr auto;
+    }
+
+    .cond-and {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .cond-warning {
+      font-size: 0.75rem;
+      color: #b45309;
+      margin: 2px 0 6px 2px;
+    }
+
+    .or-divider {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 8px 0;
+    }
+
+    .or-divider::before, .or-divider::after {
+      content: "";
+      flex: 1;
+      border-top: 1px dashed #cbd5e1;
+    }
+
+    .or-divider span {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+
+    .complex-condition {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 8px 10px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.75rem;
+      white-space: pre-wrap;
+      color: #334155;
+      overflow-x: auto;
+    }
+
     /* Match Assistant & Chips */
     .match-assistant {
       margin-top: 10px;
       padding-top: 8px;
-      border-top: 1px dashed var(--border);
+      border-top: 1px solid #e4e9f0;
     }
 
     details.match-details {
@@ -315,7 +570,7 @@
       max-height: 140px;
       overflow-y: auto;
       padding: 8px;
-      background: #f8fafc;
+      background: #ffffff;
       border: 1px solid #e2e8f0;
       border-radius: 6px;
     }
@@ -615,6 +870,10 @@
     <!-- Visual Rule Builder -->
     <div id="visual-rules-container">
       <div id="rules-list"></div>
+      <button type="button" class="add-bottom-btn" onclick="addRuleRow()"
+              title="Add another rule at the end of the list">
+        <span class="plus">+</span> Add Rule
+      </button>
     </div>
 
     <!-- JSON Rules View (Hidden by default) -->
@@ -659,6 +918,8 @@
 </div>
 
 <datalist id="all-columns-datalist"></datalist>
+<!-- CSV headers plus any columns produced by earlier rules, for letter grade conditions -->
+<datalist id="known-columns-datalist"></datalist>
 
 <!-- Regex Help Modal Dialog -->
 <div class="modal-overlay" id="regex-help-modal" onclick="closeRegexModal(event)">
@@ -1011,6 +1272,15 @@
       ruleCard.className = "rule-card";
       ruleCard.id = `rule-card-${idx}`;
 
+      // Letter grade rules use a completely different editor: an ordered scale
+      // of conditions rather than a regex + numeric calculation.
+      if (rule.type === "letter_grade") {
+        ruleCard.className = "rule-card letter-rule";
+        ruleCard.innerHTML = buildLetterGradeCardHTML(idx, rule);
+        container.appendChild(ruleCard);
+        return;
+      }
+
       // 1. Main configuration row
       const mainRow = document.createElement("div");
       mainRow.className = "rule-main-row";
@@ -1045,13 +1315,7 @@
 
         <div class="field-group">
           <label>Calculation</label>
-          <select onchange="updateRuleType(${idx}, this.value)">
-            <option value="percentage" ${rule.type === 'percentage' ? 'selected' : ''}>Percentage (%) of Points</option>
-            <option value="average" ${rule.type === 'average' ? 'selected' : ''}>Average Score</option>
-            <option value="sum" ${rule.type === 'sum' ? 'selected' : ''}>Sum Total</option>
-            <option value="count_threshold" ${rule.type === 'count_threshold' ? 'selected' : ''}>Count Mastered (>= Threshold)</option>
-            <option value="drop_lowest_sum" ${rule.type === 'drop_lowest_sum' ? 'selected' : ''}>Sum (Drop Lowest N)</option>
-          </select>
+          ${buildTypeSelectHTML(idx, rule)}
         </div>
 
         <div class="field-group">
@@ -1091,7 +1355,8 @@
       container.appendChild(ruleCard);
     });
 
-    document.getElementById("json-rules-input").value = JSON.stringify(activeRules, null, 2);
+    updateKnownColumnsDatalist();
+    syncJsonEditor();
   }
 
   function buildMatchAssistantHTML(idx, rule) {
@@ -1134,6 +1399,583 @@
         </div>
       </details>
     `;
+  }
+
+  const CALCULATION_TYPES = [
+    { value: "percentage", label: "Percentage (%) of Points" },
+    { value: "average", label: "Average Score" },
+    { value: "sum", label: "Sum Total" },
+    { value: "count_threshold", label: "Count Mastered (>= Threshold)" },
+    { value: "drop_lowest_sum", label: "Sum (Drop Lowest N)" },
+    { value: "letter_grade", label: "Letter Grade (Conditions)" }
+  ];
+
+  function buildTypeSelectHTML(idx, rule) {
+    const options = CALCULATION_TYPES.map(t =>
+      `<option value="${t.value}" ${rule.type === t.value ? 'selected' : ''}>${escapeHtml(t.label)}</option>`
+    ).join("");
+    return `<select onchange="updateRuleType(${idx}, this.value)">${options}</select>`;
+  }
+
+  function syncJsonEditor() {
+    const editor = document.getElementById("json-rules-input");
+    if (editor) editor.value = JSON.stringify(activeRules, null, 2);
+  }
+
+  /* ==============================================================
+     Letter grade rules
+
+     A letter grade rule holds an ordered scale; the first level whose
+     condition a student satisfies wins. Each level's condition is edited as
+     groups of comparisons: the level is earned when ANY group is satisfied,
+     and ALL comparisons within a group must hold (disjunctive normal form,
+     which can express any boolean combination).
+
+     Deeper nesting written by hand in the JSON editor still evaluates
+     correctly; it is simply shown read-only here.
+     ============================================================== */
+
+  const CONDITION_OPERATORS = [
+    { value: ">=", label: "is at least (\u2265)" },
+    { value: ">", label: "is more than (>)" },
+    { value: "<=", label: "is at most (\u2264)" },
+    { value: "<", label: "is less than (<)" },
+    { value: "==", label: "equals (=)" },
+    { value: "!=", label: "does not equal (\u2260)" },
+    { value: "between", label: "is between" }
+  ];
+
+  const OPERATOR_ALIASES = {
+    ">=": ">=", "gte": ">=", "\u2265": ">=",
+    ">": ">", "gt": ">",
+    "<=": "<=", "lte": "<=", "\u2264": "<=",
+    "<": "<", "lt": "<",
+    "==": "==", "=": "==", "eq": "==", "===": "==",
+    "!=": "!=", "ne": "!=", "!==": "!=", "\u2260": "!=",
+    "between": "between", "in_range": "between", "range": "between"
+  };
+
+  const GRADE_LABEL_SUGGESTIONS = ["A", "B", "C", "D", "F"];
+
+  /**
+   * Which letter grade scales are collapsed. Keyed on the rule object rather
+   * than its index so the state survives a re-render and stays with the right
+   * rule when another rule above it is deleted. Deliberately kept out of the
+   * rule itself so it never lands in saved or exported JSON.
+   */
+  const collapsedScales = new WeakSet();
+
+  function isScaleCollapsed(rule) {
+    return !!rule && collapsedScales.has(rule);
+  }
+
+  function setScaleCollapsed(ruleIdx, collapsed) {
+    const rule = activeRules[ruleIdx];
+    if (!rule) return;
+    if (collapsed) {
+      collapsedScales.add(rule);
+    } else {
+      collapsedScales.delete(rule);
+    }
+  }
+
+  /** One-line description of a scale, so a collapsed card still says what it does. */
+  function buildScaleSummaryHTML(rule) {
+    const levels = Array.isArray(rule.grades) ? rule.grades : [];
+    const labels = levels.map(level =>
+      String((level && (level.grade ?? level.label)) || "").trim() || "?");
+
+    let text;
+    if (levels.length === 0) {
+      text = "No grades yet";
+    } else {
+      const shown = labels.slice(0, 8).join(", ") + (labels.length > 8 ? ", \u2026" : "");
+      text = `${levels.length} grade${levels.length === 1 ? "" : "s"}: ${shown}`;
+    }
+
+    const fallback = String(rule.defaultGrade ?? "").trim();
+    if (fallback) text += `, otherwise ${fallback}`;
+
+    let html = `<span class="match-count-badge ${levels.length > 0 ? 'badge-success' : 'badge-warning'}">${escapeHtml(text)}</span>`;
+
+    // Keep problems visible even while the scale is hidden.
+    const unknown = getUnknownConditionColumns(rule);
+    if (parsedHeaders.length > 0 && unknown.length > 0) {
+      html += `<span class="match-count-badge badge-warning">&#9888; ${unknown.length} column${unknown.length === 1 ? '' : 's'} not found</span>`;
+    }
+    return html;
+  }
+
+  function createBlankCondition() {
+    return { column: "", op: ">=", value: "" };
+  }
+
+  function createBlankGradeLevel(grade) {
+    return { grade: grade || "", when: { all: [createBlankCondition()] } };
+  }
+
+  function isLeafCondition(node) {
+    return !!node && typeof node === "object" && !Array.isArray(node) &&
+           typeof node.column === "string";
+  }
+
+  function getLevelCondition(level) {
+    return level.when ?? level.condition ?? level.conditions ?? null;
+  }
+
+  /**
+   * Convert a stored condition into the flat group form the editor uses.
+   * Returns { groups: [[condition, ...], ...] }, or { complex: true } when the
+   * condition nests more deeply than the visual editor can represent.
+   */
+  function normalizeCondition(cond) {
+    if (cond === null || cond === undefined) return { groups: [[]] };
+    if (Array.isArray(cond)) return normalizeCondition({ all: cond });
+    if (typeof cond !== "object") return { complex: true };
+    if (isLeafCondition(cond)) return { groups: [[cond]] };
+
+    const allList = cond.all ?? cond.and;
+    if (Array.isArray(allList)) {
+      if (allList.every(isLeafCondition)) return { groups: [allList.slice()] };
+      return { complex: true };
+    }
+
+    const anyList = cond.any ?? cond.or;
+    if (Array.isArray(anyList)) {
+      const groups = [];
+      for (const child of anyList) {
+        if (isLeafCondition(child)) {
+          groups.push([child]);
+          continue;
+        }
+        const childAll = child && (child.all ?? child.and);
+        if (Array.isArray(childAll) && childAll.every(isLeafCondition)) {
+          groups.push(childAll.slice());
+          continue;
+        }
+        return { complex: true };
+      }
+      return { groups: groups.length > 0 ? groups : [[]] };
+    }
+
+    if (Object.keys(cond).length === 0) return { groups: [[]] };
+    return { complex: true };
+  }
+
+  /** Rebuild a stored condition from the editor's groups. */
+  function conditionFromGroups(groups) {
+    if (!groups || groups.length === 0) return null;
+    if (groups.length === 1) return { all: groups[0] };
+    return { any: groups.map(group => ({ all: group })) };
+  }
+
+  /**
+   * Read the groups of one grade level, hand them to a mutator, and store the
+   * result back in canonical form. Returns false for conditions that are too
+   * nested to edit visually.
+   */
+  function withGradeGroups(ruleIdx, levelIdx, mutator) {
+    const level = (activeRules[ruleIdx].grades || [])[levelIdx];
+    if (!level) return false;
+
+    const normalized = normalizeCondition(getLevelCondition(level));
+    if (normalized.complex) return false;
+
+    mutator(normalized.groups);
+    delete level.condition;
+    delete level.conditions;
+    level.when = conditionFromGroups(normalized.groups);
+    return true;
+  }
+
+  function getConditionOperator(cond) {
+    const hasRange = cond.min !== undefined || cond.max !== undefined;
+    const raw = cond.op ?? cond.operator ?? (hasRange ? "between" : ">=");
+    return OPERATOR_ALIASES[String(raw).trim().toLowerCase()] || ">=";
+  }
+
+  /** Returns [value, secondValue] as display strings. */
+  function getConditionValues(cond) {
+    const raw = cond.value ?? cond.threshold;
+    if (Array.isArray(raw)) {
+      return [raw[0] ?? "", raw[1] ?? ""];
+    }
+    if (cond.min !== undefined || cond.max !== undefined) {
+      return [cond.min ?? "", cond.max ?? ""];
+    }
+    return [raw ?? "", ""];
+  }
+
+  /** Store numbers as numbers so the saved JSON stays readable. */
+  function coerceConditionValue(val) {
+    const text = String(val ?? "").trim();
+    if (text === "") return "";
+    const num = Number(text);
+    return Number.isFinite(num) ? num : text;
+  }
+
+  /** Every column name a gradebook column could be matched against. */
+  function getKnownColumns() {
+    const names = [];
+    const seen = new Set();
+    const add = (name) => {
+      const trimmed = String(name || "").trim();
+      if (trimmed && !seen.has(trimmed)) {
+        seen.add(trimmed);
+        names.push(trimmed);
+      }
+    };
+    parsedHeaders.forEach(add);
+    activeRules.forEach(rule => add(rule.targetColumn));
+    return names;
+  }
+
+  /** Mirrors GradebookProcessor.resolveColumnIndex: exact, then case-insensitive, prefix, substring. */
+  function isKnownColumn(name) {
+    const target = String(name || "").trim().toLowerCase();
+    if (!target) return false;
+    return getKnownColumns().some(col => {
+      const lower = col.toLowerCase();
+      return lower === target || lower.startsWith(target) || lower.includes(target);
+    });
+  }
+
+  function updateKnownColumnsDatalist() {
+    const datalist = document.getElementById("known-columns-datalist");
+    if (!datalist) return;
+    datalist.innerHTML = "";
+    getKnownColumns().forEach(col => {
+      const option = document.createElement("option");
+      option.value = col;
+      datalist.appendChild(option);
+    });
+  }
+
+  function collectConditionColumns(node, out) {
+    if (!node || typeof node !== "object") return out;
+    if (Array.isArray(node)) {
+      node.forEach(child => collectConditionColumns(child, out));
+      return out;
+    }
+    if (typeof node.column === "string") {
+      out.push(node.column);
+      return out;
+    }
+    ["all", "and", "any", "or"].forEach(key => {
+      if (Array.isArray(node[key])) node[key].forEach(child => collectConditionColumns(child, out));
+    });
+    if (node.not !== undefined) collectConditionColumns(node.not, out);
+    return out;
+  }
+
+  function getUnknownConditionColumns(rule) {
+    const columns = [];
+    (rule.grades || []).forEach(level => {
+      if (level) collectConditionColumns(getLevelCondition(level), columns);
+    });
+    const unknown = [];
+    const seen = new Set();
+    columns.forEach(col => {
+      const trimmed = String(col || "").trim();
+      if (!trimmed || seen.has(trimmed) || isKnownColumn(trimmed)) return;
+      seen.add(trimmed);
+      unknown.push(trimmed);
+    });
+    return unknown;
+  }
+
+  // ----------------------------------------------------------- rendering ----
+
+  function buildLetterGradeCardHTML(idx, rule) {
+    const levels = Array.isArray(rule.grades) ? rule.grades : [];
+
+    const levelsHtml = levels.length > 0
+      ? levels.map((level, levelIdx) => buildGradeLevelHTML(idx, levelIdx, level, levels.length)).join("")
+      : `<p style="font-size: 0.85rem; color: var(--text-muted); padding: 4px 0;">
+           No grades defined yet. Add one to get started.
+         </p>`;
+
+    const unknown = getUnknownConditionColumns(rule);
+    const unknownNote = (parsedHeaders.length > 0 && unknown.length > 0)
+      ? `<div class="cond-warning">
+           &#9888; Not found in the gradebook: ${escapeHtml(unknown.join(", "))}.
+           Columns computed by other rules only exist once those rules have run, so a
+           letter grade rule must come after the rules that create the columns it uses.
+         </div>`
+      : "";
+
+    return `
+      <div class="rule-main-row letter-main-row">
+        <div class="field-group">
+          <label>Target Column (Output)</label>
+          <input type="text" list="all-columns-datalist" placeholder="e.g. Final Letter Grade"
+                 value="${escapeHtml(rule.targetColumn || '')}"
+                 oninput="updateRuleTargetColumn(${idx}, this.value)" />
+        </div>
+
+        <div class="field-group">
+          <label>Calculation</label>
+          ${buildTypeSelectHTML(idx, rule)}
+        </div>
+
+        <div class="field-group" title="Given to any student who matches none of the grades below. Leave blank to leave the cell empty.">
+          <label>Default Grade</label>
+          <input type="text" placeholder="e.g. F"
+                 value="${escapeHtml(rule.defaultGrade ?? '')}"
+                 oninput="updateLetterDefault(${idx}, this.value)" />
+        </div>
+
+        <div class="field-group checkbox-group" title="When checked, a blank score counts as 0 in comparisons. When unchecked, a condition on a blank score is simply not satisfied.">
+          <label>Blank = 0</label>
+          <input type="checkbox" ${rule.treatMissingAsZero ? 'checked' : ''}
+                 onchange="updateLetterMissing(${idx}, this.checked)" />
+        </div>
+
+        <div class="field-group" style="align-self: flex-end;">
+          <button class="btn btn-danger btn-sm" onclick="deleteRule(${idx})" title="Delete rule">&#10005;</button>
+        </div>
+      </div>
+
+      <div class="letter-scale">
+        <details class="scale-details" ${isScaleCollapsed(rule) ? '' : 'open'}
+                 ontoggle="setScaleCollapsed(${idx}, !this.open)">
+          <summary title="Show or hide this grade scale">
+            <span class="scale-title">Grade Scale</span>
+            ${buildScaleSummaryHTML(rule)}
+            <span class="scale-spacer"></span>
+            <button class="btn btn-sm"
+                    onclick="event.preventDefault(); event.stopPropagation(); addGradeLevel(${idx});">+ Add Grade</button>
+          </summary>
+          <div class="scale-body">
+            <p class="scale-note">First match wins, so list the highest grade first.</p>
+            ${levelsHtml}
+            <button type="button" class="add-bottom-btn" onclick="addGradeLevel(${idx})"
+                    title="Add another grade at the end of the scale">
+              <span class="plus">+</span> Add Grade
+            </button>
+            ${unknownNote}
+          </div>
+        </details>
+      </div>
+    `;
+  }
+
+  function buildGradeLevelHTML(ruleIdx, levelIdx, level, levelCount) {
+    const condition = getLevelCondition(level);
+    const normalized = normalizeCondition(condition);
+
+    let bodyHtml;
+    if (normalized.complex) {
+      bodyHtml = `
+        <div class="cond-warning">
+          This condition nests more deeply than the visual editor shows. It still
+          applies exactly as written &mdash; edit it in the JSON editor above.
+        </div>
+        <div class="complex-condition">${escapeHtml(JSON.stringify(condition, null, 2))}</div>`;
+    } else {
+      const isCatchAll = normalized.groups.every(group => group.length === 0);
+      const groupsHtml = normalized.groups
+        .map((group, groupIdx) => buildConditionGroupHTML(ruleIdx, levelIdx, groupIdx, group))
+        .join(`<div class="or-divider"><span>OR</span></div>`);
+
+      bodyHtml = `
+        ${isCatchAll ? `<div class="cond-warning">
+             &#9888; No conditions yet &mdash; as written, every remaining student earns this grade.
+           </div>` : ''}
+        ${groupsHtml}
+        <div style="margin-top: 8px;">
+          <button class="btn btn-outline btn-sm" onclick="addConditionGroup(${ruleIdx}, ${levelIdx})"
+                  title="Add another way to earn this grade">+ Add alternative (OR)</button>
+        </div>`;
+    }
+
+    return `
+      <div class="grade-level">
+        <div class="grade-level-head">
+          <span class="grade-order">${levelIdx + 1}</span>
+          <input type="text" class="grade-label-input" placeholder="Grade"
+                 value="${escapeHtml(level.grade ?? level.label ?? '')}"
+                 oninput="updateGradeLabel(${ruleIdx}, ${levelIdx}, this.value)" />
+          <span class="grade-hint">is earned when&hellip;</span>
+          <div class="grade-level-actions">
+            <button class="btn btn-secondary btn-sm" onclick="moveGradeLevel(${ruleIdx}, ${levelIdx}, -1)"
+                    ${levelIdx === 0 ? 'disabled' : ''} title="Move up">&#9650;</button>
+            <button class="btn btn-secondary btn-sm" onclick="moveGradeLevel(${ruleIdx}, ${levelIdx}, 1)"
+                    ${levelIdx === levelCount - 1 ? 'disabled' : ''} title="Move down">&#9660;</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteGradeLevel(${ruleIdx}, ${levelIdx})"
+                    title="Delete this grade">&#10005;</button>
+          </div>
+        </div>
+        ${bodyHtml}
+      </div>`;
+  }
+
+  function buildConditionGroupHTML(ruleIdx, levelIdx, groupIdx, group) {
+    const rowsHtml = group
+      .map((cond, condIdx) => buildConditionRowHTML(ruleIdx, levelIdx, groupIdx, condIdx, cond))
+      .join("");
+
+    return `
+      <div class="cond-group">
+        <div class="cond-group-title">All of these are true</div>
+        ${rowsHtml}
+        <button class="btn btn-outline btn-sm" onclick="addCondition(${ruleIdx}, ${levelIdx}, ${groupIdx})"
+                title="Add another requirement to this group">+ Add condition (AND)</button>
+      </div>`;
+  }
+
+  function buildConditionRowHTML(ruleIdx, levelIdx, groupIdx, condIdx, cond) {
+    const args = `${ruleIdx}, ${levelIdx}, ${groupIdx}, ${condIdx}`;
+    const op = getConditionOperator(cond);
+    const isBetween = op === "between";
+    const values = getConditionValues(cond);
+
+    const optionsHtml = CONDITION_OPERATORS
+      .map(o => `<option value="${o.value}" ${o.value === op ? 'selected' : ''}>${o.label}</option>`)
+      .join("");
+
+    const columnName = String(cond.column || "").trim();
+    let warning = "";
+    if (!columnName || String(values[0]).trim() === "" || (isBetween && String(values[1]).trim() === "")) {
+      warning = `<div class="cond-warning">Incomplete condition &mdash; it will never be satisfied.</div>`;
+    } else if (parsedHeaders.length > 0 && !isKnownColumn(columnName)) {
+      warning = `<div class="cond-warning">&#9888; No column matches "${escapeHtml(columnName)}" yet.</div>`;
+    }
+
+    return `
+      <div class="cond-row ${isBetween ? 'is-between' : ''}">
+        <input type="text" list="known-columns-datalist" placeholder="Column name\u2026"
+               value="${escapeHtml(cond.column || '')}"
+               oninput="updateConditionColumn(${args}, this.value)" />
+        <select onchange="updateConditionOperator(${args}, this.value)">${optionsHtml}</select>
+        <input type="text" placeholder="${isBetween ? 'min' : 'value'}"
+               value="${escapeHtml(values[0])}"
+               oninput="updateConditionValue(${args}, 0, this.value)" />
+        ${isBetween ? `
+          <span class="cond-and">and</span>
+          <input type="text" placeholder="max" value="${escapeHtml(values[1])}"
+                 oninput="updateConditionValue(${args}, 1, this.value)" />` : ''}
+        <button class="btn btn-danger btn-sm" onclick="deleteCondition(${args})"
+                title="Remove this condition">&#10005;</button>
+      </div>
+      ${warning}`;
+  }
+
+  // ------------------------------------------------------------ handlers ----
+
+  function suggestNextGradeLabel(levels) {
+    const used = new Set(levels.map(l => String((l && (l.grade ?? l.label)) || "").trim().toUpperCase()));
+    return GRADE_LABEL_SUGGESTIONS.find(label => !used.has(label)) || "";
+  }
+
+  function addGradeLevel(ruleIdx) {
+    const rule = activeRules[ruleIdx];
+    if (!Array.isArray(rule.grades)) rule.grades = [];
+    rule.grades.push(createBlankGradeLevel(suggestNextGradeLabel(rule.grades)));
+    collapsedScales.delete(rule);
+    renderRules();
+  }
+
+  function deleteGradeLevel(ruleIdx, levelIdx) {
+    const rule = activeRules[ruleIdx];
+    if (!Array.isArray(rule.grades)) return;
+    rule.grades.splice(levelIdx, 1);
+    renderRules();
+  }
+
+  function moveGradeLevel(ruleIdx, levelIdx, direction) {
+    const levels = activeRules[ruleIdx].grades;
+    const target = levelIdx + direction;
+    if (!Array.isArray(levels) || target < 0 || target >= levels.length) return;
+    [levels[levelIdx], levels[target]] = [levels[target], levels[levelIdx]];
+    renderRules();
+  }
+
+  function updateGradeLabel(ruleIdx, levelIdx, val) {
+    const level = (activeRules[ruleIdx].grades || [])[levelIdx];
+    if (!level) return;
+    level.grade = val;
+    delete level.label;
+    syncJsonEditor();
+  }
+
+  function updateLetterDefault(ruleIdx, val) {
+    activeRules[ruleIdx].defaultGrade = val;
+    syncJsonEditor();
+  }
+
+  function updateLetterMissing(ruleIdx, checked) {
+    activeRules[ruleIdx].treatMissingAsZero = checked;
+    syncJsonEditor();
+  }
+
+  function addConditionGroup(ruleIdx, levelIdx) {
+    withGradeGroups(ruleIdx, levelIdx, groups => groups.push([createBlankCondition()]));
+    renderRules();
+  }
+
+  function addCondition(ruleIdx, levelIdx, groupIdx) {
+    withGradeGroups(ruleIdx, levelIdx, groups => {
+      if (groups[groupIdx]) groups[groupIdx].push(createBlankCondition());
+    });
+    renderRules();
+  }
+
+  function deleteCondition(ruleIdx, levelIdx, groupIdx, condIdx) {
+    withGradeGroups(ruleIdx, levelIdx, groups => {
+      if (!groups[groupIdx]) return;
+      groups[groupIdx].splice(condIdx, 1);
+      // Drop the group entirely once it is empty, unless it is the only one left.
+      if (groups[groupIdx].length === 0 && groups.length > 1) {
+        groups.splice(groupIdx, 1);
+      }
+    });
+    renderRules();
+  }
+
+  function updateConditionColumn(ruleIdx, levelIdx, groupIdx, condIdx, val) {
+    withGradeGroups(ruleIdx, levelIdx, groups => {
+      const cond = groups[groupIdx] && groups[groupIdx][condIdx];
+      if (cond) cond.column = val;
+    });
+    syncJsonEditor();
+  }
+
+  function updateConditionOperator(ruleIdx, levelIdx, groupIdx, condIdx, val) {
+    withGradeGroups(ruleIdx, levelIdx, groups => {
+      const cond = groups[groupIdx] && groups[groupIdx][condIdx];
+      if (!cond) return;
+      const previous = getConditionValues(cond);
+      cond.op = val;
+      delete cond.operator;
+      delete cond.threshold;
+      delete cond.min;
+      delete cond.max;
+      cond.value = val === "between"
+        ? [coerceConditionValue(previous[0]), coerceConditionValue(previous[1])]
+        : coerceConditionValue(previous[0]);
+    });
+    // Re-render so the second value box appears or disappears.
+    renderRules();
+  }
+
+  function updateConditionValue(ruleIdx, levelIdx, groupIdx, condIdx, slot, val) {
+    withGradeGroups(ruleIdx, levelIdx, groups => {
+      const cond = groups[groupIdx] && groups[groupIdx][condIdx];
+      if (!cond) return;
+      const previous = getConditionValues(cond);
+      delete cond.threshold;
+      delete cond.min;
+      delete cond.max;
+      if (getConditionOperator(cond) === "between") {
+        const pair = [previous[0], previous[1]];
+        pair[slot] = val;
+        cond.value = [coerceConditionValue(pair[0]), coerceConditionValue(pair[1])];
+      } else {
+        cond.value = coerceConditionValue(val);
+      }
+    });
+    syncJsonEditor();
   }
 
   function truncateCol(name) {
@@ -1186,16 +2028,40 @@
   }
 
   function updateRuleType(index, val) {
-    activeRules[index].type = val;
-    if (val === "count_threshold") {
-      if (activeRules[index].threshold === undefined) {
-        activeRules[index].threshold = 8;
+    const rule = activeRules[index];
+    const wasLetterGrade = rule.type === "letter_grade";
+    rule.type = val;
+
+    if (val === "letter_grade") {
+      if (!Array.isArray(rule.grades) || rule.grades.length === 0) {
+        rule.grades = [createBlankGradeLevel("A")];
       }
-      document.getElementById(`rule-param-label-${index}`).textContent = "Threshold (>=)";
-    } else {
-      document.getElementById(`rule-param-label-${index}`).textContent = "Drop Lowest N";
+      if (rule.defaultGrade === undefined) rule.defaultGrade = "F";
+      // Numeric-only settings don't apply here, and leaving pointsPossible set
+      // would overwrite the Points Possible row of the letter grade column.
+      delete rule.threshold;
+      delete rule.dropLowest;
+      delete rule.pointsPossible;
+      delete rule.decimals;
+      renderRules();
+      return;
     }
-    document.getElementById("json-rules-input").value = JSON.stringify(activeRules, null, 2);
+
+    if (val === "count_threshold" && rule.threshold === undefined) {
+      rule.threshold = 8;
+    }
+
+    if (wasLetterGrade) {
+      // Switching back to a numeric calculation needs the standard layout.
+      renderRules();
+      return;
+    }
+
+    const paramLabel = document.getElementById(`rule-param-label-${index}`);
+    if (paramLabel) {
+      paramLabel.textContent = val === "count_threshold" ? "Threshold (>=)" : "Drop Lowest N";
+    }
+    syncJsonEditor();
   }
 
   // Regex modal helper functions
