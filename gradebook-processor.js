@@ -3,6 +3,10 @@
  * Works in both modern browsers and Node.js environments.
  */
 
+// Columns that identify a student rather than hold a score. The LMS needs these
+// to line uploaded grades up with the right students.
+const IDENTITY_COLUMNS = ['Student', 'LastName', 'FirstName', 'ID', 'SIS User ID', 'SIS Login ID', 'Integration ID', 'Section'];
+
 class GradebookProcessor {
   /**
    * Parse a CSV string into a 2D array of strings.
@@ -78,12 +82,29 @@ class GradebookProcessor {
     ).join('\r\n');
   }
 
+  static isIdentityColumn(header) {
+    const name = String(header).trim().toLowerCase();
+    return IDENTITY_COLUMNS.some(col => col.toLowerCase() === name);
+  }
+
+  /**
+   * Reduce processed rows to the identity columns plus the columns rules
+   * calculated, so re-uploading the file leaves every other grade untouched.
+   */
+  static keepCalculatedColumns(rows, calculatedIndices) {
+    const keep = new Set(calculatedIndices);
+    rows[0].forEach((header, index) => {
+      if (this.isIdentityColumn(header)) keep.add(index);
+    });
+    return rows.map(row => row.filter((_, index) => keep.has(index)));
+  }
+
   /**
    * Process Canvas Gradebook CSV data based on a list of calculation rules.
    * 
    * @param {string|Array<Array<string>>} csvData - Raw CSV text or 2D parsed array
    * @param {Array<Object>} rules - Array of calculation rules
-   * @returns {{ csvText: string, rows: Array<Array<string>>, headers: Array<string>, logs: Array<string> }}
+   * @returns {{ csvText: string, rows: Array<Array<string>>, headers: Array<string>, calculatedIndices: Array<number>, logs: Array<string> }}
    */
   static process(csvData, rules = []) {
     const logs = [];
@@ -127,7 +148,7 @@ class GradebookProcessor {
       const matched = [];
       headers.forEach((header, index) => {
         // Skip metadata columns
-        if (['LastName', 'FirstName', 'ID', 'SIS User ID', 'SIS Login ID', 'Section'].includes(header.trim())) {
+        if (GradebookProcessor.isIdentityColumn(header)) {
           return;
         }
 
@@ -157,6 +178,9 @@ class GradebookProcessor {
       return matched;
     }
 
+    // Indices of every column a rule wrote to, whether new or overwritten
+    const calculatedIndices = new Set();
+
     // Apply each calculation rule
     for (const rule of rules) {
       if (!rule.targetColumn) {
@@ -177,6 +201,8 @@ class GradebookProcessor {
         rule.targetColumn, 
         rule.pointsPossible !== undefined ? rule.pointsPossible : ''
       );
+
+      calculatedIndices.add(targetIndex);
 
       if (isCanvasPointsRow && rule.pointsPossible !== undefined) {
         rows[1][targetIndex] = String(rule.pointsPossible);
@@ -241,6 +267,7 @@ class GradebookProcessor {
       csvText: this.stringifyCSV(rows),
       rows,
       headers,
+      calculatedIndices: [...calculatedIndices],
       logs
     };
   }

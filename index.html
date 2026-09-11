@@ -632,6 +632,22 @@
       border-top: 1px solid var(--border);
     }
 
+    .inline-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .inline-check input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: var(--primary);
+    }
+
     .table-container {
       max-height: 440px;
       overflow: auto;
@@ -897,9 +913,15 @@
           💾 Save Rules to Browser Storage
         </button>
       </div>
-      <button class="btn" id="download-btn" onclick="downloadModifiedCSV()" disabled>
-        ⬇️ Download Updated CSV
-      </button>
+      <div class="flex-row" style="gap: 14px;">
+        <label class="inline-check" title="Leave out every score column your rules didn't calculate. Student name and ID columns are always kept so the LMS can match grades to students.">
+          <input type="checkbox" id="calculated-only-toggle" />
+          Only calculated columns
+        </label>
+        <button class="btn" id="download-btn" onclick="downloadModifiedCSV()" disabled>
+          ⬇️ Download Updated CSV
+        </button>
+      </div>
     </div>
   </div>
 
@@ -2235,7 +2257,13 @@
   function downloadModifiedCSV() {
     if (!processedResult || !processedResult.csvText) return;
 
-    const blob = new Blob([processedResult.csvText], { type: "text/csv;charset=utf-8;" });
+    const calculatedOnly = document.getElementById("calculated-only-toggle").checked;
+    const csvText = calculatedOnly
+      ? GradebookProcessor.stringifyCSV(
+          GradebookProcessor.keepCalculatedColumns(processedResult.rows, processedResult.calculatedIndices))
+      : processedResult.csvText;
+
+    const blob = new Blob([csvText], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);

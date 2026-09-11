@@ -8,6 +8,8 @@ Then pick a column that you want to compute and use some simple REGEX to select 
 
 Then process the CSV file (you will see a preview of the new columns).  Download it, and upload it back to your LMS.
 
+Tick **Only calculated columns** next to the download button to leave out every score column your rules didn't calculate.  The student name and ID columns always stay so the LMS can match grades to students, and re-uploading won't touch any other grade.
+
 ## Letter grades
 
 Set a rule's calculation to **Letter Grade (Conditions)** to turn columns into letter grades instead of numbers.
